@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#153d37">
+  <title>ColdTrack | Freezer &amp; chiller locations</title>
+  <link rel="stylesheet" href="/static/styles.css">
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+  <main id="login-screen" class="login-screen">
+    <form id="login-form" class="login-card">
+      <div class="brand-mark">C</div>
+      <p class="eyebrow">COLD EQUIPMENT TRACKER</p>
+      <h1>Welcome back</h1>
+      <p class="muted">Sign in with your office account to continue.</p>
+      <label>Username<input name="username" autocomplete="username" required></label>
+      <label>Password<input name="password" type="password" autocomplete="current-password" required></label>
+      <p id="login-error" class="form-error" role="alert"></p>
+      <button class="button button-primary button-wide" type="submit">Sign in</button>
+    </form>
+  </main>
+
+  <div id="app-shell" class="app-shell" hidden>
+    <aside id="app-sidebar" class="sidebar">
+      <a class="wordmark" href="/" aria-label="ColdTrack home"><span class="brand-mark">C</span><span>coldtrack<small>FREEZER &amp; CHILLER LOCATIONS</small></span></a>
+      <p class="nav-label">WORKSPACE</p>
+      <nav class="side-nav" aria-label="Main navigation">
+        <button class="nav-button active" data-page="inventory"><span class="nav-icon">⌖</span> Stores</button>
+        <button class="nav-button" data-page="equipment"><span class="nav-icon">▦</span> Equipment</button>
+        <button class="nav-button" data-page="imports"><span class="nav-icon">⇧</span> Import data</button>
+        <button class="nav-button" data-page="reports"><span class="nav-icon">◷</span> Service report</button>
+        <button class="nav-button admin-only" data-page="admin" hidden><span class="nav-icon">⚙</span> Administration</button>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="local-status"><span class="status-dot"></span><span><strong>Office server</strong><small>Private network</small></span></div>
+        <p class="sidebar-foot">Internal equipment data<br>Hosted on your office network</p>
+      </div>
+    </aside>
+
+    <section class="main-column">
+      <header class="topbar">
+        <div class="topbar-start">
+          <button id="sidebar-toggle" class="button button-quiet sidebar-toggle" type="button" aria-controls="app-sidebar" aria-expanded="true" aria-label="Hide navigation sidebar">☰</button>
+          <div class="breadcrumb">COLDTRACK <span>/</span> <strong id="page-crumb">STORES</strong></div>
+        </div>
+        <div class="account">
+          <div class="avatar" id="user-avatar">U</div>
+          <span id="account-name"></span>
+          <span id="account-role" class="role-pill"></span>
+          <button id="logout-button" class="button button-quiet">Sign out</button>
+        </div>
+      </header>
+
+      <section id="inventory-page" class="page">
+        <div class="page-heading">
+          <div>
+            <p class="eyebrow">STORE DIRECTORY</p>
+            <h1>Stores &amp; customers</h1>
+            <p class="muted">Start with a customer to see the freezers currently at each branch and their latest service.</p>
+          </div>
+          <button id="add-service-button" class="button button-primary"><span>＋</span> Add service</button>
+        </div>
+
+        <div class="summary-row">
+          <div class="summary-card"><span class="summary-icon green">⌖</span><div><span class="summary-label">STORES</span><strong id="asset-total">—</strong></div></div>
+          <div class="summary-card"><span class="summary-icon blue">◷</span><div><span class="summary-label">SERVICES RECORDED</span><strong id="service-total">—</strong></div></div>
+          <div class="summary-card"><span class="summary-icon amber">▦</span><div><span class="summary-label">CURRENT FREEZERS</span><strong id="transit-total">—</strong></div></div>
+        </div>
+
+        <div class="panel inventory-panel">
+          <div class="panel-heading">
+            <div><h2>Store directory</h2><p class="muted">Branches with the same name remain distinct when they have different addresses.</p></div>
+          </div>
+          <label class="store-search">Search stores<input id="store-search" type="search" placeholder="Customer, address, manager, sales rep, notes"></label>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Store / customer</th><th>Address</th><th>Area / province</th><th>Manager / contact / sales rep</th><th>Current freezers</th><th>Latest service</th><th></th></tr></thead>
+              <tbody id="store-rows"></tbody>
+            </table>
+            <div id="store-empty" class="empty-state" hidden>No stores match your search.</div>
+          </div>
+        </div>
+      </section>
+
+      <section id="equipment-page" class="page" hidden>
+        <div class="page-heading">
+          <div><p class="eyebrow">EQUIPMENT REGISTER</p><h1>Equipment</h1><p class="muted">View each current unit and where it is recorded. Register unassigned stock here, then add it to a store when it is sent out.</p></div>
+          <button id="add-equipment-button" class="button button-primary"><span>＋</span> Add equipment</button>
+        </div>
+        <section class="panel inventory-panel">
+          <div class="panel-heading"><div><h2>Current equipment</h2><p class="muted">A unit appears once at its current placement. Previous placements and service records remain available in its history.</p></div></div>
+          <label class="store-search">Search equipment<input id="equipment-search" type="search" placeholder="Brand, type, manufacturer, model, serial, store"></label>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Freezer brand / type</th><th>Manufacturer / model</th><th>Serial number</th><th>Current location</th><th>Status</th><th>Service visits</th><th></th></tr></thead>
+              <tbody id="equipment-rows"></tbody>
+            </table>
+            <div id="equipment-empty" class="empty-state" hidden>No equipment matches your search.</div>
+          </div>
+          <div class="table-footer"><span id="equipment-page-summary"></span><div class="pagination"><button id="equipment-previous" class="button button-quiet button-small">Previous</button><button id="equipment-next" class="button button-quiet button-small">Next</button></div></div>
+        </section>
+      </section>
+
+      <section id="imports-page" class="page" hidden>
+        <div class="page-heading"><div><p class="eyebrow">DATA PREPARATION</p><h1>Import workbook</h1><p class="muted">Choose inventory sheets, review the detected values, and resolve uncertain locations before anything is added.</p></div></div>
+        <section class="panel import-panel">
+          <div class="panel-heading"><div><h2>1. Select a workbook and sheets</h2><p class="muted">Single-sheet customer/freezer workbooks are selected automatically. Legacy workbooks can still import selected inventory sheets; EXPORT and SHIPMENT are optional.</p></div></div>
+          <form id="import-upload-form" class="import-upload">
+            <label>Master workbook (.xlsx)<input id="import-file" type="file" accept=".xlsx" required></label>
+            <div id="sheet-selection" class="sheet-selection" hidden></div>
+            <p id="import-error" class="form-error" role="alert"></p>
+            <button id="preview-import-button" class="button button-primary" type="submit" disabled>Preview selected sheets</button>
+          </form>
+        </section>
+        <section id="import-review-panel" class="panel import-panel" hidden>
+          <div class="panel-heading"><div><h2>2. Review and edit rows</h2><p id="import-summary" class="muted"></p></div><span id="import-review-badge" class="count-badge"></span></div>
+          <div id="import-unknown-values"></div>
+          <div id="import-location-questions"></div>
+          <div id="import-date-warnings"></div>
+          <p id="import-commit-error" class="form-error" role="alert"></p>
+          <div class="dialog-actions import-actions"><button id="cancel-import-review" type="button" class="button button-quiet">Discard preview</button><button id="commit-import-button" type="button" class="button button-primary">Submit import</button></div>
+        </section>
+        <section class="panel import-panel">
+          <div class="panel-heading"><div><h2>Import rules</h2><p class="muted">Source values are trimmed and whitespace-normalized only. Possible matches are suggestions, never silent corrections.</p></div></div>
+          <ul class="import-rules"><li>For customer/freezer sheets, Store Location is imported as Business Address, the unnamed region column as Area, AREA as Province, and FREEZER BRAND as Freezer Brand. Sales Rep is retained with the store; Manufacturer is left blank if the source has no separate manufacturer column.</li><li>Review each record in the editable row grid. Store and contact details, including Sales Rep, can be corrected per row; Area and Province selections stay linked to the approved hierarchy. Missing geography remains blank only after acknowledgment.</li><li>New Freezer Brand, Equipment description, Manufacturer, or Model values can be requested from a row and require administrator approval before the import is added. Repeated source values can be edited independently row by row.</li><li>Legacy inventory workbooks still show the original Store Location for clarification. Every accepted asset retains its source sheet and row, and its serial number remains individually searchable.</li></ul>
+        </section>
+      </section>
+
+      <section id="reports-page" class="page" hidden>
+        <div class="page-heading">
+          <div><p class="eyebrow">INSIGHTS</p><h1>Service report</h1><p class="muted">Count service visits by technician and equipment to answer questions such as “how many times has this unit been serviced by this technician?”</p></div>
+        </div>
+        <div class="panel">
+          <div class="panel-heading"><div><h2>Service visits</h2><p class="muted">Each row represents one technician and one equipment unit.</p></div><strong class="report-total" id="report-total">0 services</strong></div>
+          <div class="filter-grid report-filters">
+            <label><span>Store / customer</span><select id="report-store"></select></label>
+            <label><span>Technician</span><select id="report-technician"></select></label>
+            <label><span>Freezer Brand</span><select id="report-product_line"></select></label>
+            <label><span>Manufacturer</span><select id="report-equipment_brand"></select></label>
+            <label><span>Model</span><select id="report-model"></select></label>
+            <label><span>Serial number</span><input id="report-serial-number" type="search" placeholder="Search any serial"></label>
+          </div>
+          <div class="table-wrap"><table><thead><tr><th>Technician</th><th>Freezer Brand</th><th>Equipment</th><th>Serial</th><th>Store</th><th>Visit count</th><th>Latest service</th></tr></thead><tbody id="report-rows"></tbody></table><div id="report-empty" class="empty-state" hidden>No service visits match these filters.</div></div>
+        </div>
+      </section>
+
+      <section id="admin-page" class="page" hidden>
+        <div class="page-heading"><div><p class="eyebrow">CONTROL CENTER</p><h1>Administration</h1><p class="muted">Manage accounts, controlled dropdowns, and review the activity log.</p></div></div>
+        <div class="admin-grid">
+          <section class="panel admin-panel">
+            <div class="panel-heading"><div><h2>User accounts</h2><p class="muted">Staff can manage equipment and service records. Admins can also manage users and lists.</p></div></div>
+            <form id="user-form" class="compact-form">
+              <label>Username<input name="username" minlength="3" required></label>
+              <label>Display name<input name="display_name" required></label>
+              <label>Temporary password<input name="password" type="password" minlength="12" required></label>
+              <label>Role<select name="role"><option value="staff">Staff</option><option value="admin">Administrator</option></select></label>
+              <button class="button button-primary" type="submit">Create account</button>
+            </form>
+            <div id="user-list" class="admin-list"></div>
+          </section>
+          <section class="panel admin-panel">
+            <div class="panel-heading"><div><h2>Controlled lists</h2><p class="muted">Add values, or edit an existing value and select “Save name” to update linked records. Deactivate redundant values to keep historical records intact.</p></div></div>
+            <form id="lookup-form" class="compact-form lookup-form">
+              <label>List<select name="field" id="lookup-field"></select></label>
+              <label>New value<input name="value" required></label>
+              <label id="lookup-parent-label" hidden>Area<select name="parent_value" id="lookup-parent"></select></label>
+              <button class="button button-primary" type="submit">Add value</button>
+            </form>
+            <div id="lookup-list" class="admin-list"></div>
+          </section>
+          <section class="panel admin-panel full-width">
+            <div class="panel-heading"><div><h2>Database backups</h2><p class="muted">Automatic backups run daily at the selected server-local time while ColdTrack is running. The latest 30 backups stay on this host under <code>instance\backups</code>.</p></div><button id="backup-now" class="button button-primary">Create backup now</button></div>
+            <form id="backup-schedule-form" class="compact-form lookup-form">
+              <label>Daily backup time<input name="time" type="time" required></label>
+              <button class="button button-quiet" type="submit">Save schedule</button>
+            </form>
+            <p class="muted">Download a backup to keep a copy off this host. Backup files contain the complete database, including account password hashes; keep them private.</p>
+            <div id="backup-list" class="admin-list"></div>
+          </section>
+          <section class="panel admin-panel full-width">
+            <div class="panel-heading"><div><h2>Reset for testing</h2><p class="muted">Deletes all stores, freezers, services, imports, logs, dropdown values, and other accounts. The signed-in administrator is retained. A database backup is created first.</p></div><button id="reset-application-data" class="button button-danger">Reset all app data</button></div>
+          </section>
+          <section class="panel admin-panel full-width">
+            <div class="panel-heading"><div><h2>Possible value variants</h2><p class="muted">Suggestions only. Review before merging; a merge updates all matching equipment or service records.</p></div><button id="refresh-variants" class="button button-quiet">Refresh suggestions</button></div>
+            <div id="variant-list" class="variant-list"></div>
+          </section>
+          <section class="panel admin-panel full-width">
+            <div class="panel-heading"><div><h2>Import values awaiting approval</h2><p class="muted">Approve a proposed dropdown value before the related batch is added to inventory.</p></div></div>
+            <div id="import-approval-list" class="admin-list"></div>
+          </section>
+          <section class="panel admin-panel full-width">
+            <div class="panel-heading"><div><h2>Activity log</h2><p class="muted">Record changes are attributed to the signed-in account.</p></div></div>
+            <div class="table-wrap"><table><thead><tr><th>When</th><th>Person</th><th>Action</th><th>Record</th><th>Change details</th></tr></thead><tbody id="audit-rows"></tbody></table></div>
+          </section>
+        </div>
+      </section>
+      <footer class="app-footer">COLDTRACK <span>·</span> Freezer &amp; chiller locations</footer>
+    </section>
+  </div>
+
+  <dialog id="store-dialog" class="record-dialog store-dialog">
+    <div class="dialog-heading"><div><p class="eyebrow">STORE / CUSTOMER</p><h2 id="store-dialog-title"></h2><p id="store-dialog-address" class="muted"></p></div><button class="icon-button" data-close-store-dialog aria-label="Close">×</button></div>
+    <nav class="dialog-tabs" aria-label="Store sections">
+      <button class="dialog-tab active" data-store-tab="freezers">Freezers at this store</button>
+      <button class="dialog-tab" data-store-tab="info">Store information</button>
+    </nav>
+    <section id="store-freezer-view" class="store-dialog-view">
+      <div class="panel-heading"><div><h3>Current freezers</h3><p class="muted">Each freezer's history is scoped to this placement.</p></div><div class="button-group"><button id="store-add-freezer" class="button button-quiet button-small">Add freezer</button><button id="store-add-service" class="button button-primary button-small">Add service</button></div></div>
+      <div id="store-freezer-list" class="store-freezer-list"></div>
+    </section>
+    <section id="store-info-view" class="store-dialog-view" hidden>
+      <form id="store-info-form">
+        <div class="form-grid">
+          <label>Store / customer name<input name="store_name" required></label>
+          <label>Business address<input name="business_address" required></label>
+          <label>Area<select name="area"></select></label>
+          <label>Province<select name="province"></select></label>
+          <label>Store manager<input name="manager"></label>
+          <label>Contact number<input name="contact"></label>
+          <label>Sales representative<input name="sales_rep"></label>
+          <label class="span-two">Store notes<textarea name="notes" rows="4" placeholder="Notes to reference when working with this store"></textarea></label>
+        </div>
+        <p id="store-info-error" class="form-error" role="alert"></p>
+        <div class="dialog-actions"><button class="button button-primary" type="submit">Save store information</button></div>
+      </form>
+    </section>
+    <section id="freezer-history-view" class="store-dialog-view" hidden>
+      <button id="back-to-store" class="button button-quiet button-small">← Back to freezers</button>
+      <div class="panel-heading freezer-history-heading"><div><h3 id="freezer-history-title"></h3><p id="freezer-history-subtitle" class="muted"></p></div><button id="move-freezer-button" class="button button-quiet button-small">Record move</button></div>
+      <div id="freezer-service-history" class="history-list"></div>
+      <form id="move-freezer-form" class="move-freezer-form" hidden>
+        <h3>Record freezer move</h3>
+        <p class="muted">A new placement is created at the destination. The old store and its service history stay intact.</p>
+        <div class="form-grid"><label>Destination store<select name="store_id" required></select></label><label>Move date<input name="effective_date" type="date" required></label></div>
+        <p id="move-freezer-error" class="form-error" role="alert"></p>
+        <button class="button button-primary button-small" type="submit">Move freezer</button>
+      </form>
+    </section>
+  </dialog>
+
+  <dialog id="equipment-dialog" class="record-dialog">
+    <div class="dialog-heading"><div><p class="eyebrow">EQUIPMENT REGISTER</p><h2>Add unassigned equipment</h2><p class="muted">Register a unit that is in stock or not yet assigned to a store. No service visit is created.</p></div><button class="icon-button" data-close-equipment-dialog aria-label="Close">×</button></div>
+    <form id="equipment-form">
+      <div class="form-section"><h3>Equipment details</h3>
+        <div class="form-grid">
+          <label>Freezer Brand<select name="product_line"></select></label>
+          <label>Equipment type<select name="equipment_type" required></select></label>
+          <label>Manufacturer<select name="equipment_brand"></select></label>
+          <label>Model<select name="model"></select></label>
+          <label>Serial number<input name="serial_number"></label>
+          <label>Date of delivery<input name="delivery_date" type="date"></label>
+          <label class="span-two">Equipment notes<textarea name="notes" rows="3"></textarea></label>
+        </div>
+      </div>
+      <p id="equipment-error" class="form-error" role="alert"></p>
+      <div class="dialog-actions"><button type="button" class="button button-quiet" data-close-equipment-dialog>Cancel</button><button class="button button-primary" type="submit">Save equipment</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="add-freezer-dialog" class="record-dialog">
+    <div class="dialog-heading"><div><p class="eyebrow">STORE INVENTORY</p><h2>Add freezer to store</h2><p class="muted">Add a unit without recording a service visit.</p></div><button class="icon-button" data-close-add-freezer aria-label="Close">×</button></div>
+    <form id="add-freezer-form">
+      <div class="form-section">
+        <label id="available-freezer-label">Select unassigned equipment<select name="asset_id" required></select></label>
+        <label class="inline-check"><input id="new-store-freezer-toggle" type="checkbox"> Add new equipment directly to this store</label>
+        <div id="store-new-freezer-fields" class="form-grid new-record-fields" hidden>
+          <label>Freezer Brand<select name="product_line"></select></label>
+          <label>Equipment type<select name="equipment_type"></select></label>
+          <label>Manufacturer<select name="equipment_brand"></select></label>
+          <label>Model<select name="model"></select></label>
+          <label>Serial number<input name="serial_number"></label>
+          <label>Date of delivery<input name="delivery_date" type="date"></label>
+          <label class="span-two">Equipment notes<textarea name="notes" rows="3"></textarea></label>
+        </div>
+      </div>
+      <p id="add-freezer-error" class="form-error" role="alert"></p>
+      <div class="dialog-actions"><button type="button" class="button button-quiet" data-close-add-freezer>Cancel</button><button class="button button-primary" type="submit">Add freezer</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="service-dialog" class="record-dialog">
+    <div class="dialog-heading"><div><p class="eyebrow">SERVICE ENTRY</p><h2>Add service</h2><p class="muted">Choose a store and freezer, then record the visit.</p></div><button class="icon-button" data-close-service-dialog aria-label="Close">×</button></div>
+    <form id="add-service-form">
+      <input type="hidden" name="service_id">
+      <div class="form-section"><h3>Store / customer</h3>
+        <label>Choose a store<select name="store_id" required></select></label>
+        <label class="inline-check"><input id="new-store-toggle" type="checkbox"> Add a new store</label>
+        <div id="new-store-fields" class="form-grid new-record-fields" hidden>
+          <label>Store / customer name<input name="new_store_name"></label>
+          <label>Business address<input name="new_store_address"></label>
+          <label>Area<select name="new_store_area"></select></label>
+          <label>Province<select name="new_store_province"></select></label>
+          <label>Store manager<input name="new_store_manager"></label>
+          <label>Contact number<input name="new_store_contact"></label>
+          <label>Sales representative<input name="new_store_sales_rep"></label>
+          <label class="span-two">Store notes<textarea name="new_store_notes" rows="3"></textarea></label>
+        </div>
+      </div>
+      <div class="form-section"><h3>Freezer</h3>
+        <label id="existing-freezer-label">Select a freezer<select name="asset_id"></select></label>
+        <label class="inline-check"><input id="new-freezer-toggle" type="checkbox"> Add a new freezer at this store</label>
+        <div id="new-freezer-fields" class="form-grid new-record-fields" hidden>
+          <label>Freezer Brand<select name="product_line"></select></label>
+          <label>Equipment type<select name="equipment_type" required></select></label>
+          <label>Manufacturer<select name="equipment_brand"></select></label>
+          <label>Model<select name="model"></select></label>
+          <label>Serial number<input name="serial_number"></label>
+        </div>
+      </div>
+      <div class="form-section"><h3>Service visit</h3>
+        <div class="form-grid">
+          <label>Service date<input name="service_date" type="date" required></label>
+          <label>Technician<select name="technician" required></select></label>
+          <label>Repairs done<textarea name="repairs" rows="2"></textarea></label>
+          <label>Parts used<textarea name="parts" rows="2"></textarea></label>
+          <label class="span-two">Service notes<textarea name="notes" rows="3"></textarea></label>
+        </div>
+      </div>
+      <p id="add-service-error" class="form-error" role="alert"></p>
+      <div class="dialog-actions"><button type="button" class="button button-quiet" data-close-service-dialog>Cancel</button><button class="button button-primary" type="submit">Save service</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="service-report-dialog" class="record-dialog service-report-dialog">
+    <div class="dialog-heading"><div><p class="eyebrow">SERVICE REPORT</p><h2 id="service-report-title">Freezer service report</h2><p id="service-report-subtitle" class="muted"></p></div><button class="icon-button" data-close-service-report aria-label="Close">×</button></div>
+    <section class="service-report-content">
+      <div id="service-report-history" class="history-list"></div>
+    </section>
+  </dialog>
+</body>
+</html>
